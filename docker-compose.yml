@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    container_name: app_container
+    command: >
+      sh -c "uvicorn app:app --host 0.0.0.0 --port ${APP_PORT}"
+    networks:
+      - main-network
+    ports:
+      - ${EXTERNAL_APP_PORT}:${APP_PORT}
+networks:
+  main-network:
+    driver: bridge
