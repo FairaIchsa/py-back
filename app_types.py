@@ -1,9 +1,17 @@
 import pydantic
 import enum
+import typing
 
 
 class ModelRequest(pydantic.BaseModel):
     images: list[str]
+
+
+CarDefectTypeSerializer = pydantic.PlainSerializer(
+    lambda e: e.name,
+    return_type='str',
+    when_used='always'
+)
 
 
 class CarDefectType(enum.Enum):
@@ -16,15 +24,9 @@ class CarDefectType(enum.Enum):
     paint_chip = 6      # Скол краски
     corrosion = 7       # Коррозия
 
-    def __str__(self):
-        return self.name
-
 
 class CarDefect(pydantic.BaseModel):
-    class Config:
-        json_encoders = {CarDefectType: lambda t: t.name}
-
-    type: CarDefectType
+    type: typing.Annotated[CarDefectType, CarDefectTypeSerializer]
     area: float
 
 
