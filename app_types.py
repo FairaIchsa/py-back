@@ -1,6 +1,7 @@
 import pydantic
 import enum
 import typing
+import numpy
 
 
 class ModelRequest(pydantic.BaseModel):
@@ -27,9 +28,13 @@ class CarDefectType(enum.Enum):
 
 class CarDefect(pydantic.BaseModel):
     type: typing.Annotated[CarDefectType, CarDefectTypeSerializer]
-    area: float
+    polygon: list[list[float]]
+
+
+class ImageResult(pydantic.BaseModel):
+    filename: str
+    defects: list[CarDefect]
 
 
 class ModelResponse(pydantic.BaseModel):
-    defects: list[CarDefect]
-    files: list[str]
+    result: list[ImageResult]
