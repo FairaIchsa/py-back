@@ -4,7 +4,7 @@ import typing
 
 
 class ModelRequest(pydantic.BaseModel):
-    images: list[str]
+    files: list[str]
 
 
 CarDefectTypeSerializer = pydantic.PlainSerializer(
@@ -32,4 +32,4 @@ class CarDefect(pydantic.BaseModel):
 
 class ModelResponse(pydantic.BaseModel):
     defects: list[CarDefect]
-    images: list[str]
+    files: list[str]
