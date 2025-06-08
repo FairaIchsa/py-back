@@ -1,11 +1,15 @@
 import os
 from ultralytics import YOLO
+import shutil
+import cv2
+import numpy as np
+from PIL import Image
 from fastapi import FastAPI, exceptions
 from app_types import ModelRequest, ModelResponse, CarDefect, CarDefectType, ImageResult
 
 
-UPLOAD_DIR = "static/uploads"
-PROCESSED_DIR = "static/processed"
+UPLOAD_DIR = "/Users/icetusk/Projects/ws-quiz/static/uploads"
+PROCESSED_DIR = "/Users/icetusk/Projects/ws-quiz/static/processed"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(PROCESSED_DIR, exist_ok=True)
@@ -28,35 +32,58 @@ async def check_car(request: ModelRequest) -> ModelResponse:
         defects: list[CarDefect] = []
 
         src_path = os.path.join(UPLOAD_DIR, filename)
-        # dst_path = os.path.join(PROCESSED_DIR, filename)
+        dst_path = os.path.join(PROCESSED_DIR, filename)
 
-        if os.path.exists(src_path):
-            results = damage_detection_model.predict(
-                source=src_path,  # путь к тестовым изображениям
-                save=True,  # сохранять результаты с разметкой
-                imgsz=640,  # размер изображения (должен совпадать с обучением)
-                conf=0.65,  # порог уверенности (можно взять из inference_config.yaml)
-                iou=0.5,  # порог IoU
-                project=PROCESSED_DIR.split('/')[0],
-                name=PROCESSED_DIR.split('/', 1)[1],
-                exist_ok=True
-            )
+        if not os.path.exists(src_path):
+            raise exceptions.HTTPException(status_code=404, detail=f"File {filename} not found")
 
-            for result in results:
-                defects.append(
-                    CarDefect(
-                        type=CarDefectType(result.summary()[0]['class']),
-                        polygon=list(*result.masks.xyn)
+        # ✅ Копируем файл
+        shutil.copy(src_path, dst_path)
+
+        # ✅ YOLO prediction
+        results = damage_detection_model.predict(
+            source=dst_path,
+            save=False,
+            imgsz=640,
+            conf=0.65,
+            iou=0.5,
+            project=PROCESSED_DIR.split('/')[0],
+            name=PROCESSED_DIR.split('/', 1)[1],
+            exist_ok=True
+        )
+
+        # ✅ Загрузка изображения в OpenCV
+        image = cv2.imread(dst_path)
+        height, width = image.shape[:2]
+
+        for result in results:
+            masks = result.masks
+            classes = result.boxes.cls.tolist() if result.boxes and result.boxes.cls is not None else []
+
+            if masks and masks.xyn:
+                for mask, class_id in zip(masks.xyn, classes):
+                    # Сохраняем дефект
+                    defects.append(
+                        CarDefect(
+                            type=CarDefectType(int(class_id)),
+                            polygon=mask
+                        )
                     )
-                )
-            image_results.append(ImageResult(
-                filename=filename,
-                defects=defects
-            ))
-        else:
-            raise exceptions.HTTPException(status_code=404, detail="Item not found")
 
-    response = ModelResponse(
-        result=image_results
-    )
-    return response
+                    # Рисуем на картинке
+                    points = np.array([
+                        [int(x * width), int(y * height)] for x, y in mask
+                    ], dtype=np.int32)
+
+                    cv2.polylines(image, [points], isClosed=True, color=(0, 0, 255), thickness=2)
+                    cv2.fillPoly(image, [points], color=(0, 0, 255))
+
+        # ✅ Сохраняем изображение с отрисованными повреждениями
+        cv2.imwrite(dst_path, image)
+
+        image_results.append(ImageResult(
+            filename=filename,
+            defects=defects
+        ))
+
+    return ModelResponse(result=image_results)
