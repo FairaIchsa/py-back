@@ -1,0 +1,200 @@
+package template
+
+import "encoding/json"
+
+type Claim struct {
+	ID      string
+	Details json.RawMessage
+}
+
+type Image struct {
+	ID          int
+	ClaimID     string
+	Filename    string
+	Description string
+	Type        string
+}
+
+templ Result(c Claim, imgs []Image) {
+	<!DOCTYPE html>
+	<html lang="ru">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Аскан — Повреждения</title>
+			<script src="/static/tailwind.js"></script>
+			<style>
+            @font-face {
+            	font-family: 'Hauora';
+            	src: url('/static/Hauora-Medium.ttf') format('truetype');
+            	font-weight: normal;
+            	font-style: normal;
+            }
+
+            body {
+            	font-family: 'Hauora', sans-serif;
+                letter-spacing: 0.01em;
+            }
+            </style>
+		</head>
+		<body class="bg-[#121212] text-white font-sans">
+			<!-- Wrapper -->
+			<div class="min-h-screen">
+				<!-- Sidebar -->
+            <aside class="bg-[#181818] w-full lg:w-64 p-5 flex flex-col justify-between lg:fixed lg:h-[calc(100vh-2rem)] m-0 lg:m-4 rounded-none lg:rounded-2xl lg:shadow-xl z-20">
+                <div class="flex flex-col gap-6">
+                    <div class="flex justify-center">
+                        <a href="http://localhost:8080/">
+                            <img src="/static/logo.png" alt="Аскан" class="w-28 h-auto"/>
+                        </a>
+                    </div>
+                    <nav class="space-y-4 text-sm text-white">
+                        <ul class="space-y-2">
+                            <li>
+                                <a class="flex items-center gap-3 hover:text-gray-300" href="#">
+                                    <img src="/static/Scanner.svg" alt="scan" class="w-4 h-4"/>
+                                    <span>Новое сканирование</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="flex items-center gap-3 hover:text-gray-300" href="#">
+                                    <img src="/static/Search.svg" alt="vin" class="w-4 h-4"/>
+                                    <span>Проверить VIN</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="flex items-center gap-3 hover:text-gray-300" href="#">
+                                    <img src="/static/Image.png" alt="library" class="w-4 h-4"/>
+                                    <span>Библиотека</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="flex items-center gap-3 hover:text-gray-300" href="#">
+                                    <img src="/static/Document 2.svg" alt="reports" class="w-4 h-4"/>
+                                    <span>Отчёты</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <div>
+                            <p class="text-gray-400 mb-2">Мои сканирования</p>
+                            <ul class="space-y-1 pl-2">
+                                <li class="text-white bg-zinc-700 px-3 py-1 rounded-xl font-medium truncate">Кузовные повреждения: сильная...</li>
+                                <li class="text-gray-400 truncate">Битое правое крыло переднего б...</li>
+                                <li class="text-gray-400 truncate">Трещина по периметру лобового...</li>
+                                <li class="text-gray-400 truncate">Вмятина и царапины на правом з...</li>
+                                <li class="text-gray-400 truncate">Левое зеркало сломано, царапин...</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mt-4 mb-2">Старые</p>
+                            <ul class="space-y-1 pl-2">
+                                <li class="text-gray-400 truncate">Вмятина на крыше, деформация...</li>
+                                <li class="text-gray-400 truncate">Повреждён левый порог, перекос...</li>
+                                <li class="text-gray-400 truncate">Разбит задний фонарь, вмятина н...</li>
+                                <li class="text-gray-400 truncate">Трещина в передней фаре, сколы...</li>
+                            </ul>
+                        </div>
+                    </nav>
+                </div>
+                <button class="bg-zinc-800 text-white text-sm mt-6 px-4 py-2 rounded-xl hover:bg-zinc-700">
+                    Вернуться в Авито
+                </button>
+            </aside>
+				<!-- Main content -->
+				<main class="pt-8 px-6 lg:pl-[304px]">
+					<!-- 288px + 16px внутреннего отступа -->
+					<div class="max-w-[1000px] mx-auto">
+						<!-- Sticky Header -->
+						<div class="sticky top-0 z-10 bg-[#121212] pt-6 pb-4">
+							<h1 class="text-xl font-semibold">
+								Кузовные повреждения: сильная деформация капота — не подлежит замене
+							</h1>
+						</div>
+						<!-- Thumbnails -->
+						<!-- Thumbnails -->
+						<!-- Thumbnails -->
+						<div class="flex flex-wrap gap-4 mb-6">
+							for i, img := range imgs {
+								<button
+									onclick={ templ.JSFuncCall("changeMainImage", "http://localhost:8080/static/processed/"+img.Filename) }
+									class="flex items-center gap-2 bg-zinc-800 px-4 py-2 rounded-xl text-sm hover:bg-zinc-700 transition"
+									type="button"
+								>
+									<img
+										src={ "/static/processed/" + img.Filename }
+										alt="thumb"
+										class="w-8 h-8 rounded-xl object-cover border border-zinc-600"
+									/>
+									<span>Фото-{ i + 1 }</span>
+								</button>
+							}
+						</div>
+						<!-- Main layout: Image + Right side -->
+						<div class="flex flex-col lg:flex-row gap-6">
+							<!-- Image -->
+							<!-- Image -->
+							<div class="lg:w-1/2 w-full">
+								if len(imgs) > 0 {
+									<img id="main-image" src={ "/static/processed/" + imgs[0].Filename } alt="Поврежденная машина" class="rounded-xl w-full object-cover"/>
+								}
+							</div>
+							<!-- Right Column -->
+							<div class="lg:w-1/2 w-full flex flex-col gap-6">
+								<!-- Report -->
+								<div class="bg-zinc-800 rounded-xl p-6 space-y-4">
+									<h2 class="text-lg font-semibold">Обнаруженные повреждения:</h2>
+									<div class="space-y-3 text-sm">
+										<div>
+											<p class="font-semibold">Кузовные повреждения</p>
+											<ul class="list-disc list-inside text-gray-300">
+												<li>Сильная деформация капота — не подлежит замене</li>
+												<li>Полностью разрушен передний бампер</li>
+												<li>Решётка радиатора выломана, отсутствуют элементы конструкции</li>
+											</ul>
+										</div>
+										<div>
+											<p class="font-semibold">Стеклянные элементы</p>
+											<ul class="list-disc list-inside text-gray-300">
+												<li>Лобовое стекло с трещиной — требует замены</li>
+											</ul>
+										</div>
+										<div>
+											<p class="font-semibold">Потенциальные скрытые дефекты</p>
+											<ul class="list-disc list-inside text-gray-300">
+												<li>Поврежден радиатор, система охлаждения и силовые элементы передней части кузова</li>
+											</ul>
+										</div>
+									</div>
+								</div>
+								<!-- Conclusion -->
+								<div class="bg-zinc-800 rounded-xl p-6 space-y-4">
+									<div class="flex justify-between items-center">
+										<h2 class="text-lg font-semibold">Заключение</h2>
+										<button class="bg-zinc-700 hover:bg-zinc-600 text-sm px-4 py-1 rounded-md">Скачать акт</button>
+									</div>
+									<ul class="list-disc list-inside text-sm text-gray-300 space-y-1">
+										<li>Серьёзная деформация передней части кузова</li>
+										<li>Не исключено повреждение несущих элементов</li>
+										<li>Трещина на лобовом стекле является нарушением требований безопасности</li>
+										<li>Высокий риск скрытых технических неисправностей</li>
+									</ul>
+									<div class="bg-red-900/40 border border-red-600 text-red-300 p-4 rounded-md text-sm">
+										⚠️ Транспортное средство не допускается к кредитованию. Автомобиль находится в аварийном состоянии и требует значительного восстановления. Финансирование покупки в текущем виде нецелесообразно с точки зрения рисков и остаточной стоимости.
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</main>
+			</div>
+			<script>
+            function changeMainImage(src) {
+            	const main = document.getElementById("main-image");
+            	if (main) {
+            		main.src = src;
+            	}
+            }
+            </script>
+		</body>
+	</html>
+}
