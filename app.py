@@ -4,6 +4,7 @@ import shutil
 import cv2
 import numpy as np
 from PIL import Image
+import time
 from fastapi import FastAPI, exceptions
 from app_types import ModelRequest, ModelResponse, CarDefect, CarDefectType, ImageResult
 
@@ -81,9 +82,12 @@ async def check_car(request: ModelRequest) -> ModelResponse:
         # ✅ Сохраняем изображение с отрисованными повреждениями
         cv2.imwrite(dst_path, image)
 
+        #time.sleep(5)
+
         image_results.append(ImageResult(
             filename=filename,
             defects=defects
         ))
 
     return ModelResponse(result=image_results)
+
